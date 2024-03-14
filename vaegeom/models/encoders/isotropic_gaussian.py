@@ -4,8 +4,8 @@ from torch import Tensor
 from torch.distributions.distribution import Distribution
 from torch.distributions.multivariate_normal import MultivariateNormal
 
-from taivae.models.linear_layer import LinearLayers
-from taivae.models.linear_layer import LinearLayerConfig
+from vaegeom.models.linear_layer import LinearLayers
+from vaegeom.models.linear_layer import LinearLayerConfig
 
 class IsotropicGaussianEncoder(nn.Module):
     """

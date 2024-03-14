@@ -22,6 +22,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 from .logger.show_array import ShowArray
+from vaegeom.callbacks import ProgressMsg
 from vaegeom.models import build_model
 from vaegeom.modules import build_module
 
@@ -135,14 +136,20 @@ def set_trainer(
     auc = CSVLogger(dir, name=name, version=inst_torchconfig.seed)
     # Callbacks
     ckpt_kw = load_config(ckpt_config) 
-    inst_ckpt = ModelCheckpoint(**ckpt_kw)
+    #inst_ckpt = ModelCheckpoint(**ckpt_kw)
     earlystop_kw = load_config(earlystop_config)
-    inst_earlystop = EarlyStopping(**earlystop_kw)
+    #inst_earlystop = EarlyStopping(**earlystop_kw)
+    list_callbacks = [
+        ProgressMsg(logger),
+        ModelCheckpoint(**ckpt_kw),
+        EarlyStopping(**earlystop_kw)
+    ]
     # Trainer
     trainer_kw = load_config(trainer_config)
     inst_trainer = L.Trainer(
         logger=auc,
-        callbacks=[inst_ckpt, inst_earlystop],
+        callbacks=list_callbacks,
+        #callbacks=[inst_ckpt, inst_earlystop],
         **trainer_kw
     )
     return inst_module, inst_trainer
