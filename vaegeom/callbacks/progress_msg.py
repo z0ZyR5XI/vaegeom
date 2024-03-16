@@ -17,9 +17,9 @@ class ProgressMsg(L.Callback):
         self.logger = logger
         self.log_interval = log_interval
 
-    def on_validation_epoch_end(self, trainer, pl_module):
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
         epoch = trainer.current_epoch
         val_loss = trainer.callback_metrics['val_loss']
         if epoch % self.log_interval == 0:
-            self.logger.info(f'Epoch {epoch}: val_loss = {val_loss :.4g}')
+            self.logger.info(f'Checkpoint; Epoch = {epoch}, val_loss = {val_loss :.4f}')
         
