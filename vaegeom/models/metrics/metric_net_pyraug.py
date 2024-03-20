@@ -25,6 +25,7 @@ class MetricNetPyraug(nn.Module):
         *args,
         lmd: float = 1e-3,
         eps: float = 1e-2,
+        n_fixed_point_iter = 3,
         **kwargs):
         super().__init__()
         self.dim_input = dim_input
@@ -37,6 +38,7 @@ class MetricNetPyraug(nn.Module):
         self.temperature = temperature
         self.lmd = lmd
         self.eps = eps
+        self.n_fixed_point_iter = n_fixed_point_iter
 
     @property
     def dim_offdiag(self) -> int:
@@ -52,7 +54,7 @@ class MetricNetPyraug(nn.Module):
 
         Returns
         -------
-        out: (n_batch, n_dim, n_dim), inverse metric tensor on points
+        out: (*, n_batch, n_dim, n_dim), inverse metric tensor on points
         """
         weight = square_cdist(z, c).div(self.temperature ** 2).neg().exp()
         weight = weight.unsqueeze(-1).unsqueeze(-1) # (*, n_batch, n_centroids, 1, 1)
@@ -62,18 +64,8 @@ class MetricNetPyraug(nn.Module):
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """
-        Returns
-        -------
-        mu: (n_batch, latent_dim), mean of Gaussian
-        scale_tril: (n_batch, latent_dim, latent_dim)
-            Cholesky factor of Gaussian
         """
-        x = self.hidden(x)
-        mu = self.latent_mu(x)
-        logvar = self.latent_logvar(x)
-        L_vec = self.latent_offdiag(x)
-        scale_tril = self._create_scale_tril(logvar, L_vec)
-        return mu, scale_tril
+        raise NotImplementedError
 
     def _hamiltonian(
         self, 
@@ -82,12 +74,72 @@ class MetricNetPyraug(nn.Module):
         z: Tensor,
         rho: Tensor,
         G_inv: Tensor) -> Tensor:
-        # Potential: U = -log(p(x|z)) - log(p(z))
+        """
+        Returns
+        -------
+        out: (*, n_batch)
+        """
         log_p_xgivenz = output.distr_p_xgivenz.log_prob(x) # (S, B)
         log_p_z = output.distr_p_z.log_prob(z) # (S, B)
-        U = -(log_p_xgivenz + log_p_z)
-        # Kinetic: K = -log(p(rho, G))
-        K = self._gaussian_neg_log_prob(rho, G_inv) # (S, B)
+        log_p_rho = self._gaussian_log_prob(rho, G_inv) # (S, B)
+
+        return (log_p_xgivenz + log_p_z + log_p_rho).neg()
+
+    def _hamiltonian_sum(
+        self, 
+        output: 'VAEOutput',
+        x: Tensor,
+        z: Tensor,
+        rho: Tensor,
+        G_inv: Tensor) -> Tensor:
+        """
+        Returns
+        -------
+        out: (,)
+        """
+        return self._hamiltonian(output, x, z, rho, G_inv).sum()
+
+    def _leapfrog_1(
+        self, 
+        output: 'VAEOutput',
+        x: Tensor,
+        z: Tensor,
+        rho: Tensor,
+        G_inv: Tensor) -> Tensor:
+        """
+        Returns
+        -------
+        out: (,)
+        """
+        return self._hamiltonian(output, x, z, rho, G_inv).sum()
+
+    def _leapfrog_2(
+        self, 
+        output: 'VAEOutput',
+        x: Tensor,
+        z: Tensor,
+        rho: Tensor,
+        G_inv: Tensor) -> Tensor:
+        """
+        Returns
+        -------
+        out: (,)
+        """
+        return self._hamiltonian(output, x, z, rho, G_inv).sum()
+
+    def _leapfrog_3(
+        self, 
+        output: 'VAEOutput',
+        x: Tensor,
+        z: Tensor,
+        rho: Tensor,
+        G_inv: Tensor) -> Tensor:
+        """
+        Returns
+        -------
+        out: (,)
+        """
+        return self._hamiltonian(output, x, z, rho, G_inv).sum()
 
     def _vec_to_tril(self, value: Tensor) -> Tensor:
         """
