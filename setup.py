@@ -5,7 +5,8 @@ setup(
     version='1.1.0',
     packages=find_packages(),
     install_requires=[
-        'lightning',
-        'torch'
+        'numpy',
+        'pandas',
+        'torch==1.12.1'
     ]
 )

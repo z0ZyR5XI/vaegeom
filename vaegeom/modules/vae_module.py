@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from dataclasses import field
 
-import lightning as L
+#import lightning as L
 import torch
 from torch import nn
 from torch import optim
@@ -22,7 +22,8 @@ class VAEConfig:
     optim: str = 'Adam'
     optim_kw: dict = field(default_factory=dict)
 
-class VAEModule(L.LightningModule):
+class VAEModule(nn.Module):
+#class VAEModule(L.LightningModule):
 
     def __init__(
         self,
@@ -40,23 +41,27 @@ class VAEModule(L.LightningModule):
     def _calc_record_loss(self, batch, batch_idx, state):
         output = self.forward(batch, self.config.sampling)
         list_loss = self.model.calc_loss(batch, output)
-        self.log_dict({
-            f'{state}_{key}': value.item()
-            for key, value in zip(self.model.keys_loss, list_loss)
-        })
-        loss = list_loss.sum()
-        self.log(f'{state}_loss', loss.item())
-        return loss
+        return list_loss
+        #self.log_dict({
+        #    f'{state}_{key}': value.item()
+        #    for key, value in zip(self.model.keys_loss, list_loss)
+        #})
+        #loss = list_loss.sum()
+        #self.log(f'{state}_loss', loss.item())
+        #return loss
 
     def training_step(self, batch, batch_idx):
         return self._calc_record_loss(batch, batch_idx, state='train')
 
+    @torch.no_grad()
     def validation_step(self, batch, batch_idx):
         return self._calc_record_loss(batch, batch_idx, state='val')
 
+    @torch.no_grad()
     def test_step(self, batch, batch_idx):
         return self._calc_record_loss(batch, batch_idx, state='test')
 
+    @torch.no_grad()
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         """
         Get encoder outputs.
