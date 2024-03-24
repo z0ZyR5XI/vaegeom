@@ -43,7 +43,8 @@ class IsotropicGaussianEncoder(nn.Module):
         )
         self.dim_latent = self.dims_latent_mu[-1]
 
-    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, x: Tensor) -> Distribution:
+    #def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """
         Returns
         -------
@@ -54,11 +55,14 @@ class IsotropicGaussianEncoder(nn.Module):
         mu = self.latent_mu(x)
         logvar = self.latent_logvar(x)
         cov = torch.diag_embed(logvar.exp())
-        return mu, cov
+        return self.create_q_z((mu, cov))
+        #return mu, cov
 
-    def create_cov(self, params: tuple[Tensor, Tensor]) -> Tensor:
-        mu, cov = params
-        return mu, cov
+    def create_cov(self, q: Distribution) -> Tensor:
+    #def create_cov(self, params: tuple[Tensor, Tensor]) -> Tensor:
+        return q.mean, q.covariance_matrix
+        #mu, cov = params
+        #return mu, cov
 
     def create_q_z(self, params: tuple[Tensor, Tensor]) -> Distribution:
         """

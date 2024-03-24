@@ -40,7 +40,8 @@ class GaussianDecoder(nn.Module):
             dims=[dim_output]
         )
 
-    def forward(self, z: Tensor, sampling: int) -> tuple[Tensor]:
+    def forward(self, z: Tensor, sampling: int) -> Distribution:
+    #def forward(self, z: Tensor, sampling: int) -> tuple[Tensor]:
         """
         Parameters (required)
         ---------------------
@@ -54,7 +55,8 @@ class GaussianDecoder(nn.Module):
         z = self.hidden(z)
         y = self.output(z)
         y = y.view(sampling, -1, y.shape[-1])
-        return (y,)
+        return self.create_p_xgivenz((y,))
+        #return (y,)
 
     def create_p_xgivenz(self, params: tuple[Tensor]) -> Distribution:
         """

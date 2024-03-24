@@ -48,7 +48,8 @@ class GaussianEncoder(IsotropicGaussianEncoder):
     def dim_offdiag(self) -> int:
         return self.dim_latent * (self.dim_latent - 1) // 2
 
-    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, x: Tensor) -> Distribution:
+    #def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """
         Returns
         -------
@@ -61,17 +62,18 @@ class GaussianEncoder(IsotropicGaussianEncoder):
         logvar = self.latent_logvar(x)
         L_vec = self.latent_offdiag(x)
         scale_tril = self._create_scale_tril(logvar, L_vec)
-        return mu, scale_tril
+        return self.create_q_z((mu, scale_tril))
+        #return mu, scale_tril
 
     def _create_scale_tril(self, logvar: Tensor, L_vec: Tensor) -> Tensor:
         scale_tril = torch.diag_embed(torch.exp(0.5 * logvar))
         scale_tril = scale_tril.add_(self._vec_to_tril(L_vec))
         return scale_tril
 
-    def create_cov(self, params: tuple[Tensor, Tensor]) -> Tensor:
-        mu, scale_tril = params
-        cov = scale_tril.matmul(scale_tril.transpose(-2, -1))
-        return mu, cov
+    #def create_cov(self, params: tuple[Tensor, Tensor]) -> Tensor:
+    #    mu, scale_tril = params
+    #    cov = scale_tril.matmul(scale_tril.transpose(-2, -1))
+    #    return mu, cov
 
     def create_q_z(self, params: tuple[Tensor, Tensor]) -> Distribution:
         """
