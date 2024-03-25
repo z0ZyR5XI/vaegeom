@@ -45,7 +45,7 @@ class VAE(nn.Module):
         return build_encoder(dim_input=self.dim_input, **self.encoder_kw)
 
     def build_decoder(self):
-        return build_decoder(dim_input=self.dim_input, **self.decoder_kw)
+        return build_decoder(dim_output=self.dim_input, **self.decoder_kw)
 
     def forward(
         self,

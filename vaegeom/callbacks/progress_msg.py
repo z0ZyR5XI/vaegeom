@@ -18,7 +18,7 @@ class ProgressMsg(L.Callback):
         self.log_interval = log_interval
 
     def on_save_checkpoint(self, trainer, pl_module, checkpoint):
-        #epoch = trainer.current_epoch
+        epoch = trainer.current_epoch
         #val_loss = trainer.callback_metrics['val_loss']
         if epoch % self.log_interval == 0:
             self.logger.info(f'Checkpoint')

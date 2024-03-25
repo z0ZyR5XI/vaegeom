@@ -59,7 +59,8 @@ class VAEModule(L.LightningModule):
         #p_xgivenz, q_z = self.model(x, sampling)
         p_z = self.create_p_z(x, output)
         #p_z = self.create_p_z(x, q_z)
-        return VAEModuleOutput(p_z=p_z, **asdict(output))
+        return VAEModuleOutput(output=output, p_z=p_z)
+        #return VAEModuleOutput(p_z=p_z, **asdict(output))
         #return VAEModuleOutput(p_xgivenz, q_z, p_z)
         #return VAEOutput(p_xgivenz, q_z, p_z)
         #return self.model(x, sampling)
@@ -94,7 +95,8 @@ class VAEModule(L.LightningModule):
         q_mu: (n_batch, n_dim), mean of posterior
         q_cov: (n_batch, n_dim, n_dim), covariance of posterior
         """
-        output = self.model(x, sampling)
+        output = self.forward(batch, self.config.sampling)
+        #output = self.model(x, sampling)
         #p_xgivenz, q_z = self.model(batch)
         recon_x = output.p_xgivenz.mean.mean(dim=0)
         #recon_x = p_xgivenz.mean.mean(dim=0)

@@ -4,8 +4,10 @@ from torch import nn
 
 from .vae_module import VAEConfig
 from .vae_module import VAEModule
+from .vae_updateprior import VAEUpdatePrior
 
 MODULES = {
+    'VAEUpdatePrior': VAEUpdatePrior,
     'VAEModule': VAEModule
 }
 
