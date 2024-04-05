@@ -1,7 +1,7 @@
 from .random import RandomCentroids
 
 CENTROIDS = {
-    'RandomCentroids': RandomCentroids
+    'Random': RandomCentroids
 }
 
 def build_centroid(name: int, num_centroids: int, *args, **kwargs):

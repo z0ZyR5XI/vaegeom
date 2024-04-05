@@ -125,7 +125,8 @@ def set_trainer(
     )
     logger.debug(inst_module)
     logger.debug(inst_module.config)
-    for _n, _p in inst_model.named_parameters():
+    for _n, _p in inst_module.named_parameters():
+    #for _n, _p in inst_model.named_parameters():
         inst_torchconfig.show_array.head(_p, _n)
     # AUC (log)
     name = '_'.join([

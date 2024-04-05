@@ -37,16 +37,16 @@ class VAEModule(L.LightningModule):
         super().__init__()
         self.model = model
         self.config = config
-        self.name_predicts = ('recon_x', 'q_mu', 'q_cov')
+
+    @classmethod
+    def create_config(cls, *args, **kwargs) -> VAEConfig:
+        return VAEConfig(**kwargs)
 
     def create_p_z(self, x: Tensor, output: VAEOutput) -> Distribution:
-    #def create_p_z(self, x: Tensor, q: Distribution) -> Distribution:
-    #def create_p_z(self, q: Distribution) -> Distribution:
         """
         Create distribution p(z) from q(z|x).
         """
         loc = torch.zeros_like(output.q_z.mean) # (N, K)
-        #loc = torch.zeros_like(q.mean) # (N, K)
         cov = torch.diag_embed(torch.ones_like(loc))
         out = self.model.encoder.create_q_z((loc, cov))
         return out
@@ -54,16 +54,9 @@ class VAEModule(L.LightningModule):
     def forward(
         self,
         x: Tensor, sampling: int | None = None) -> VAEModuleOutput:
-        #x: Tensor, sampling: int | None = None) -> VAEOutput:
         output = self.model(x, sampling)
-        #p_xgivenz, q_z = self.model(x, sampling)
         p_z = self.create_p_z(x, output)
-        #p_z = self.create_p_z(x, q_z)
         return VAEModuleOutput(output=output, p_z=p_z)
-        #return VAEModuleOutput(p_z=p_z, **asdict(output))
-        #return VAEModuleOutput(p_xgivenz, q_z, p_z)
-        #return VAEOutput(p_xgivenz, q_z, p_z)
-        #return self.model(x, sampling)
     
     def _calc_record_loss(self, batch, batch_idx, state):
         output = self.forward(batch, self.config.sampling)
@@ -96,15 +89,17 @@ class VAEModule(L.LightningModule):
         q_cov: (n_batch, n_dim, n_dim), covariance of posterior
         """
         output = self.forward(batch, self.config.sampling)
-        #output = self.model(x, sampling)
-        #p_xgivenz, q_z = self.model(batch)
         recon_x = output.p_xgivenz.mean.mean(dim=0)
-        #recon_x = p_xgivenz.mean.mean(dim=0)
         q_mu, q_cov = self.model.encoder.create_cov(output.q_z)
-        #q_mu, q_cov = self.model.encoder.create_cov(q_z)
         return recon_x, q_mu, q_cov
-        #enc = self.model.encoder(batch)
-        #return self.model.encoder.create_cov(enc)
+
+    @property
+    def name_predicts(self):
+        return (
+            'recon_x',
+            'q_mu',
+            'q_cov'
+        )
 
     def configure_optimizers(self):
         optimizer = OPTIMS[self.config.optim](

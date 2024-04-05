@@ -5,9 +5,11 @@ from torch import nn
 #from .encoders import build_encoder
 from .iwae import IWAE
 from .vae import VAE
+from .vae_nokl import VAENoKL
 
 MODELS = {
     'IWAE': IWAE,
+    'VAENoKL': VAENoKL,
     'VAE': VAE
 }
 
